@@ -1,0 +1,1 @@
+export { computeSpawnPosition } from './spawn';
