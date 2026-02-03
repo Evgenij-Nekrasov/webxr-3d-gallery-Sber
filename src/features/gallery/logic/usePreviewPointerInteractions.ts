@@ -1,9 +1,12 @@
-import type { Dispatch, SetStateAction } from 'react';
-import { useCallback, useMemo } from 'react';
-import type { ThreeEvent } from '@react-three/fiber';
+import {
+  useCallback,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
-import type { GalleryEntry } from '../../../types/gallery';
 import type { GalleryPointerHandlers } from './types';
+import { useBasePointerHandlers } from './useBasePointerHandlers';
 
 type Options = {
   enabled: boolean;
@@ -16,46 +19,19 @@ export function usePreviewPointerInteractions({
   setHoveredId,
   setSelectedId,
 }: Options) {
-  const guardEvent = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {
-      if (!enabled) return false;
-      event.stopPropagation();
-      return true;
-    },
-    [enabled],
-  );
-
-  const handleHover = useCallback(
-    (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
-      if (!guardEvent(event)) return;
-      setHoveredId(item.id);
-    },
-    [guardEvent, setHoveredId],
-  );
-
-  const handleBlur = useCallback(
-    (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
-      if (!guardEvent(event)) return;
-      setHoveredId((current) => (current === item.id ? null : current));
-    },
-    [guardEvent, setHoveredId],
-  );
-
-  const handleSelect = useCallback(
-    (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
-      if (!guardEvent(event)) return;
-      setSelectedId(item.id);
-    },
-    [guardEvent, setSelectedId],
-  );
+  const { handlers: baseHandlers } = useBasePointerHandlers({
+    enabled,
+    setHoveredId,
+    setSelectedId,
+  });
 
   const handlers = useMemo<GalleryPointerHandlers>(
     () => ({
-      onHover: handleHover,
-      onBlur: handleBlur,
-      onGrabStart: handleSelect,
+      onHover: baseHandlers.onHover,
+      onBlur: baseHandlers.onBlur,
+      onGrabStart: baseHandlers.onSelect,
     }),
-    [handleBlur, handleHover, handleSelect],
+    [baseHandlers],
   );
 
   const onPointerMissed = useCallback(
@@ -67,8 +43,5 @@ export function usePreviewPointerInteractions({
     [enabled, setSelectedId],
   );
 
-  return {
-    handlers,
-    onPointerMissed,
-  };
+  return { handlers, onPointerMissed };
 }

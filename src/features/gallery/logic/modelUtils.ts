@@ -1,5 +1,12 @@
 import * as THREE from 'three';
 
+import {
+  HIGHLIGHT_COLOR,
+  HIGHLIGHT_EMISSIVE,
+  NEUTRAL_COLOR,
+  NEUTRAL_EMISSIVE,
+} from '../../../constants';
+
 type ModelPrepOptions = {
   targetSize: number;
   pedestalHeight: number;
@@ -37,16 +44,23 @@ export function prepareModelScene(
 }
 
 export function applyHighlight(root: THREE.Object3D, enabled: boolean) {
-  const highlightEmissive = new THREE.Color(0.1, 0.35, 0.55);
-  const neutralEmissive = new THREE.Color(0, 0, 0);
-  const highlightColor = new THREE.Color('#7dd3fc');
-  const neutralColor = new THREE.Color('#ffffff');
+  const highlightEmissive = new THREE.Color(
+    HIGHLIGHT_EMISSIVE.r,
+    HIGHLIGHT_EMISSIVE.g,
+    HIGHLIGHT_EMISSIVE.b,
+  );
+  const neutralEmissive = new THREE.Color(
+    NEUTRAL_EMISSIVE.r,
+    NEUTRAL_EMISSIVE.g,
+    NEUTRAL_EMISSIVE.b,
+  );
+  const highlightColor = new THREE.Color(HIGHLIGHT_COLOR);
+  const neutralColor = new THREE.Color(NEUTRAL_COLOR);
   root.traverse((child) => {
     if (!(child as THREE.Mesh).isMesh) return;
     const mesh = child as THREE.Mesh;
-    const materials = Array.isArray(mesh.material)
-      ? mesh.material
-      : [mesh.material];
+    const materials =
+      Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     materials.forEach((material) => {
       const mat = material as THREE.Material & {
         emissive?: THREE.Color;

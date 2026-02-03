@@ -3,10 +3,16 @@ import type { XRStore } from '@react-three/xr';
 
 type Options = {
   store: XRStore;
+  checkXRSupport?: () => boolean;
 };
 
-export function useToggleVR({ store }: Options) {
-  const xrSupported = useMemo(() => Boolean(navigator.xr), []);
+const defaultCheckXRSupport = () => Boolean(navigator.xr);
+
+export function useToggleVR({
+  store,
+  checkXRSupport = defaultCheckXRSupport,
+}: Options) {
+  const xrSupported = useMemo(() => checkXRSupport(), []);
 
   const toggleVR = useCallback(async () => {
     const currentSession = store.getState().session;
@@ -20,7 +26,6 @@ export function useToggleVR({ store }: Options) {
 
     try {
       await store.enterVR();
-      console.log('VR сессия запущена');
     } catch (error) {
       const active = store.getState().session;
       if (active) {

@@ -1,6 +1,7 @@
 import {
   useCallback,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -9,7 +10,8 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { Vector3 } from 'three';
 
 import type { GalleryEntry } from '../../../types/gallery';
-import type { GalleryPointerHandlers } from './types';
+import type { GrabPointerHandlers } from './types';
+import { usePointerGuard } from './usePointerGuard';
 import { MIN_RAY_Y } from './constants';
 
 type GrabState = {
@@ -33,15 +35,8 @@ export function useVRPointerInteractions({
   setSelectedId,
 }: Options) {
   const [grabState, setGrabState] = useState<GrabState | null>(null);
-
-  const guardEvent = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {
-      if (!enabled) return false;
-      event.stopPropagation();
-      return true;
-    },
-    [enabled],
-  );
+  const moveTargetRef = useRef<{ id: string; target: Vector3 } | null>(null);
+  const guardEvent = usePointerGuard(enabled);
 
   const clearGrabbed = useCallback((id?: string) => {
     setGrabState((current) => {
@@ -59,8 +54,8 @@ export function useVRPointerInteractions({
   const handleHover = useCallback(
     (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
       if (!guardEvent(event)) return;
+      console.info(item.libraryKey);
       setHoveredId(item.id);
-      console.info('Тип объекта:', item.libraryKey);
     },
     [guardEvent, setHoveredId],
   );
@@ -97,11 +92,7 @@ export function useVRPointerInteractions({
     (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
       if (!guardEvent(event)) return;
       setGrabState((current) =>
-        (
-          current &&
-          current.id === item.id &&
-          current.pointerId === event.pointerId
-        ) ?
+        current?.id === item.id && current?.pointerId === event.pointerId ?
           null
         : current,
       );
@@ -114,6 +105,7 @@ export function useVRPointerInteractions({
   const handleGrabMove = useCallback(
     (item: GalleryEntry, event: ThreeEvent<PointerEvent>) => {
       if (!guardEvent(event)) return;
+
       setGrabState((current) => {
         if (
           !current ||
@@ -122,6 +114,7 @@ export function useVRPointerInteractions({
         ) {
           return current;
         }
+
         const directionY = event.ray.direction.y;
         if (Math.abs(directionY) < MIN_RAY_Y) return current;
         const distance = (current.planeY - event.ray.origin.y) / directionY;
@@ -131,14 +124,22 @@ export function useVRPointerInteractions({
           .add(event.ray.direction.clone().multiplyScalar(distance))
           .sub(current.offset);
         target.y = current.planeY;
-        onMoveObject(item.id, target);
+
+        moveTargetRef.current = { id: item.id, target };
+
         return current;
       });
+
+      const targetData = moveTargetRef.current;
+      if (targetData) {
+        onMoveObject(targetData.id, targetData.target);
+        moveTargetRef.current = null;
+      }
     },
     [guardEvent, onMoveObject],
   );
 
-  const handlers: GalleryPointerHandlers = useMemo(
+  const handlers: GrabPointerHandlers = useMemo(
     () => ({
       onHover: handleHover,
       onBlur: handleBlur,

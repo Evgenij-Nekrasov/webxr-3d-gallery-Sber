@@ -7,10 +7,17 @@ export type GalleryPointerHandler = (
   event: ThreeEvent<PointerEvent>,
 ) => void;
 
-export type GalleryPointerHandlers = {
+export type BasePointerHandlers = {
   onHover?: GalleryPointerHandler;
   onBlur?: GalleryPointerHandler;
+  onSelect?: GalleryPointerHandler;
+};
+
+export type GrabPointerHandlers = BasePointerHandlers & {
   onGrabStart?: GalleryPointerHandler;
   onGrabEnd?: GalleryPointerHandler;
   onGrabMove?: GalleryPointerHandler;
 };
+
+// Для обратной совместимости
+export type GalleryPointerHandlers = GrabPointerHandlers;

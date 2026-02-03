@@ -1,6 +1,7 @@
 import { useGLTF } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
 
+import { HIGHLIGHT_COLOR, MODEL_LIBRARY } from '../../../constants';
 import type { GalleryEntry } from '../../../types/gallery';
 import type { GalleryPointerHandlers } from '../logic/types';
 import { applyHighlight, prepareModelScene } from '../logic/modelUtils';
@@ -68,7 +69,7 @@ export function GalleryItem({
           args={[PEDESTAL_RADIUS, PEDESTAL_RADIUS, PEDESTAL_HEIGHT, 48]}
         />
         <meshStandardMaterial
-          color={highlighted ? '#7dd3fc' : pedestalColor}
+          color={highlighted ? HIGHLIGHT_COLOR : pedestalColor}
           metalness={0.25}
           roughness={0.6}
         />
@@ -78,8 +79,4 @@ export function GalleryItem({
   );
 }
 
-useGLTF.preload('/bolshoi_theatre.glb');
-useGLTF.preload('/french_cannon.glb');
-useGLTF.preload('/lion.glb');
-useGLTF.preload('/motherland_calls.glb');
-useGLTF.preload('/saint_basils_cathedral.glb');
+MODEL_LIBRARY.forEach((model) => useGLTF.preload(model.url));
